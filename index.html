@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Training App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Fondo y superficies */
+            --bg-base: #000000;
+            --surface-1: #0B0F17;
+            --surface-1-glass: rgba(15, 15, 15, 0.60);
+
+            /* Texto */
+            --text-primary: #E6E6E6;
+            --text-secondary: #A3ADBF;
+            --text-tertiary: #7A8597;
+
+            /* Acento y estados */
+            --accent: #8AA8DF;
+            --accent-border: rgba(138, 168, 223, 0.40);
+            --on-accent: #000000;
+            --success: #8ADF9B;
+
+            /* Elementos secundarios */
+            --border-hairline: rgba(255, 255, 255, 0.05);
+            --border-input: rgba(255, 255, 255, 0.10);
+            --fill-subtle: rgba(255, 255, 255, 0.06);
+            --fill-track: rgba(255, 255, 255, 0.08);
+
+            /* Tipografía */
+            --font-display: "Outfit", system-ui, sans-serif;
+            --font-text: "Inter", system-ui, sans-serif;
+
+            /* Radios de borde */
+            --radius-pill: 9999px;
+            --radius-control: 12px;
+            --radius-card: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-text);
+            padding: 20px;
+            padding-bottom: 80px; 
+        }
+
+        h1, h2, h3 {
+            font-family: var(--font-display);
+            font-weight: 600;
+            letter-spacing: -0.03em;
+        }
+
+        h1 { font-size: 34px; line-height: 1.10; margin-bottom: 24px; }
+        h2 { font-size: 26px; line-height: 1.15; margin-top: 32px; margin-bottom: 16px; }
+        h3 { font-size: 22px; line-height: 1.20; margin-bottom: 4px; }
+        
+        /* Superficies / Tarjetas */
+        .card {
+            background-color: var(--surface-1);
+            border: 1px solid var(--border-hairline);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Anillos de progreso */
+        .progress-ring {
+            position: relative;
+            width: 72px;
+            height: 72px;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+            width: 72px;
+            height: 72px;
+        }
+
+        .progress-ring circle {
+            fill: transparent;
+            stroke-width: 6;
+            stroke-linecap: round;
+        }
+
+        .progress-ring .track {
+            stroke: var(--fill-track);
+        }
+
+        .progress-ring .fill {
+            stroke: var(--accent);
+            stroke-dasharray: 188.5; /* 2 * pi * r (r=30) */
+            stroke-dashoffset: 188.5;
+            transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.5s ease;
+        }
+
+        .progress-ring.completed .fill {
+            stroke: var(--success);
+        }
+
+        .progress-ring .count {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 18px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .card-content {
+            flex: 1;
+            margin-left: 16px;
+        }
+
+        .goal-text {
+            font-size: 14px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+
+        /* Botón Icono Secundario */
+        .btn-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-pill);
+            background-color: var(--fill-subtle);
+            border: none;
+            color: var(--text-primary);
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-icon:active { transform: scale(0.97); }
+
+        /* Contenedor de Estadísticas */
+        .stats-container {
+            background-color: var(--surface-1);
+            border: 1px solid var(--border-hairline);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .stat-box {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+
+        /* Hoja Inferior (Cristal Ahumado) */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 99;
+        }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+
+        .bottom-sheet {
+            position: fixed;
+            bottom: -100%;
+            left: 0; right: 0;
+            background-color: var(--surface-1-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: var(--radius-card) var(--radius-card) 0 0;
+            padding: 24px;
+            z-index: 100;
+            transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bottom-sheet.active { bottom: 0; }
+
+        .handle {
+            width: 36px; height: 4px;
+            background-color: var(--fill-track);
+            border-radius: 2px;
+            margin: 0 auto 24px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 16px;
+            margin-bottom: 24px;
+        }
+
+        input[type="number"] {
+            background-color: var(--fill-subtle);
+            border: 1px solid var(--border-input);
+            border-radius: var(--radius-control);
+            color: var(--text-primary);
+            padding: 16px;
+            font-size: 16px;
+            font-family: var(--font-text);
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        input[type="number"]:focus { border-color: var(--accent-border); }
+
+        /* Botón Primario Sólido */
+        .btn-primary {
+            background-color: var(--accent);
+            color: var(--on-accent);
+            border: none;
+            border-radius: var(--radius-pill);
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-primary:active { transform: scale(0.97); }
+    </style>
+</head>
+<body>
+
+    <h1>Resumen de hoy</h1>
+
+    <!-- Tarjeta Flexiones -->
+    <div class="card">
+        <div class="progress-ring" id="ring-pushups">
+            <svg>
+                <circle class="track" cx="36" cy="36" r="30"></circle>
+                <circle class="fill" cx="36" cy="36" r="30"></circle>
+            </svg>
+            <div class="count" id="count-pushups">0</div>
+        </div>
+        <div class="card-content">
+            <h3>Flexiones</h3>
+            <div class="goal-text">Objetivo: 100 diarias</div>
+        </div>
+        <button class="btn-icon" aria-label="Añadir flexiones" onclick="openModal('pushups', 'Flexiones')">+</button>
+    </div>
+
+    <!-- Tarjeta Dominadas -->
+    <div class="card">
+        <div class="progress-ring" id="ring-pullups">
+            <svg>
+                <circle class="track" cx="36" cy="36" r="30"></circle>
+                <circle class="fill" cx="36" cy="36" r="30"></circle>
+            </svg>
+            <div class="count" id="count-pullups">0</div>
+        </div>
+        <div class="card-content">
+            <h3>Dominadas</h3>
+            <div class="goal-text">Objetivo: 100 diarias</div>
+        </div>
+        <button class="btn-icon" aria-label="Añadir dominadas" onclick="openModal('pullups', 'Dominadas')">+</button>
+    </div>
+
+    <h2>Último mes</h2>
+    <div class="stats-container">
+        <div class="stat-box">
+            <div class="stat-value" id="avg-pushups">0</div>
+            <div class="stat-label">Media Flexiones</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="avg-pullups">0</div>
+            <div class="stat-label">Media Dominadas</div>
+        </div>
+    </div>
+
+    <!-- Hoja Inferior (Bottom Sheet) -->
+    <div class="overlay" id="overlay" onclick="closeModal()"></div>
+    <div class="bottom-sheet" id="modal">
+        <div class="handle"></div>
+        <h3 id="modal-title">Añadir</h3>
+        <div class="input-group">
+            <input type="number" id="rep-input" placeholder="¿Cuántas has hecho?" inputmode="numeric">
+        </div>
+        <button class="btn-primary" onclick="addReps()">Añadir registro</button>
+    </div>
+
+    <script>
+        const GOAL = 100;
+        let currentExercise = '';
+        
+        // Obtener datos de almacenamiento local
+        function getTrainingData() {
+            return JSON.parse(localStorage.getItem('trainingData')) || {};
+        }
+
+        // Obtener fecha actual en formato YYYY-MM-DD
+        function getTodayString() {
+            const today = new Date();
+            return `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+        }
+
+        function updateUI() {
+            const data = getTrainingData();
+            const today = getTodayString();
+            
+            const pushupsToday = (data.pushups && data.pushups[today]) ? data.pushups[today] : 0;
+            const pullupsToday = (data.pullups && data.pullups[today]) ? data.pullups[today] : 0;
+
+            updateRing('pushups', pushupsToday);
+            updateRing('pullups', pullupsToday);
+            
+            updateAverages(data);
+        }
+
+        function updateRing(type, count) {
+            const ring = document.getElementById(`ring-${type}`);
+            const fill = ring.querySelector('.fill');
+            const countText = document.getElementById(`count-${type}`);
+            
+            const radius = 30;
+            const circumference = 2 * Math.PI * radius; // Aprox 188.5
+            
+            // Calculo para no desbordar el SVG
+            const percentage = Math.min(count / GOAL, 1);
+            const offset = circumference - (percentage * circumference);
+            
+            fill.style.strokeDashoffset = offset;
+            countText.innerText = count;
+
+            if (count >= GOAL) {
+                ring.classList.add('completed');
+            } else {
+                ring.classList.remove('completed');
+            }
+        }
+
+        function updateAverages(data) {
+            document.getElementById('avg-pushups').innerText = Math.round(calculateAverage(data.pushups));
+            document.getElementById('avg-pullups').innerText = Math.round(calculateAverage(data.pullups));
+        }
+
+        function calculateAverage(exerciseData) {
+            if (!exerciseData) return 0;
+            const dates = Object.keys(exerciseData);
+            if (dates.length === 0) return 0;
+            
+            const totalReps = dates.reduce((acc, date) => acc + exerciseData[date], 0);
+            return totalReps / dates.length;
+        }
+
+        function openModal(type, title) {
+            currentExercise = type;
+            document.getElementById('modal-title').innerText = `Añadir ${title}`;
+            document.getElementById('rep-input').value = '';
+            
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('modal').classList.add('active');
+            
+            // Foco en el campo de texto después de la animación para sacar teclado en móvil
+            setTimeout(() => document.getElementById('rep-input').focus(), 300);
+        }
+
+        function closeModal() {
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('modal').classList.remove('active');
+            document.getElementById('rep-input').blur();
+        }
+
+        function addReps() {
+            const input = document.getElementById('rep-input');
+            const reps = parseInt(input.value);
+            if (isNaN(reps) || reps <= 0) return;
+
+            const data = getTrainingData();
+            const today = getTodayString();
+            
+            if (!data[currentExercise]) data[currentExercise] = {};
+            if (!data[currentExercise][today]) data[currentExercise][today] = 0;
+            
+            data[currentExercise][today] += reps;
+            localStorage.setItem('trainingData', JSON.stringify(data));
+            
+            // Si el terminal soporta vibración (pequeño feedback al guardar exitoso)
+            if (navigator.vibrate) navigator.vibrate(50);
+            
+            closeModal();
+            updateUI();
+        }
+
+        // Inicializar
+        updateUI();
+    </script>
+</body>
+</html>
